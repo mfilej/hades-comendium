@@ -1,3 +1,6 @@
 [tools]
 deno = "2"
 node = "23"
+
+[tasks.server]
+run = "deno run dev"
