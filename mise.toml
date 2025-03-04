@@ -1,13 +1,21 @@
+[env]
+_.path = "node_modules/.bin"
 [tools]
 deno = "2"
 htmlq = "latest"
 node = "23"
 
 [tasks.server]
-run = "deno run dev"
+run = "vite"
+
+[tasks.build]
+run = "vue-tsc -b && vite build"
+
+[tasks.preview]
+run = "vite preview"
 
 [tasks.scrape]
-run = "deno run --allow-write --allow-net scrape-boons.ts"
+run = "deno run --allow-write --allow-net scripts/scrape-boons.ts"
 
-[tasks.combine]
-run = "deno run --allow-read --allow-write --allow-net combine-boons.ts"
+[tasks.seed-db]
+run = "deno run --allow-read --allow-write --allow-net scripts/seed-db.ts"
