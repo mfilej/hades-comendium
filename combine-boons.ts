@@ -86,12 +86,12 @@ async function main() {
         }
         
         // Add Description (2nd column in original)
+        const descriptionCell = combinedDocument.createElement("td");
         if (cells[1]) {
-          newRow.appendChild(cells[1].cloneNode(true));
-        } else {
-          const emptyCell = combinedDocument.createElement("td");
-          newRow.appendChild(emptyCell);
+          // Only take the basic description text, not any HTML tables inside
+          descriptionCell.textContent = cells[1].textContent?.split("\n")[0] || "";
         }
+        newRow.appendChild(descriptionCell);
         
         // Extract Type from Notes column (4th column in original)
         const typeCell = combinedDocument.createElement("td");

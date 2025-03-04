@@ -1,6 +1,10 @@
 [tools]
 deno = "2"
+htmlq = "latest"
 node = "23"
 
 [tasks.server]
 run = "deno run dev"
+
+[tasks.scrape]
+run = "deno run --allow-write --allow-net scrape-boons.ts"
