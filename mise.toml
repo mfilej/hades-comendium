@@ -8,3 +8,6 @@ run = "deno run dev"
 
 [tasks.scrape]
 run = "deno run --allow-write --allow-net scrape-boons.ts"
+
+[tasks.combine]
+run = "deno run --allow-read --allow-write --allow-net combine-boons.ts"
