@@ -10,30 +10,38 @@ interface Boon {
   requires: string;
 }
 
+interface BoonData {
+  id: number;
+  god: string;
+  row_idx: number;
+  boon_name: string;
+  boon_html: string;
+  description: string;
+  rarity: string;
+  notes: string;
+  prerequisites: string;
+}
+
 const boons = ref<Boon[]>([]);
 
 onMounted(async () => {
   try {
-    const response = await fetch('/combined-boons.html');
-    const html = await response.text();
+    const response = await fetch('/data/boons.json');
+    const data: BoonData[] = await response.json();
     
-    // Create a temporary DOM element to parse the HTML
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    
-    // Get all rows except the header
-    const rows = Array.from(doc.querySelectorAll('body>table>tbody>tr')).slice(1);
-    
-    // Parse each row into a Boon object
-    boons.value = rows.map(row => {
-      const cells = Array.from(row.querySelectorAll('td'));
+    // Map database boons to the component's Boon format
+    boons.value = data.map(item => {
+      // Extract boon type from description (e.g., Attack, Special, Cast, etc.)
+      const typeMatch = item.description.match(/<b>([^<]+)<\/b>/);
+      const type = typeMatch ? typeMatch[1] : '';
+      
       return {
-        god: cells[0]?.textContent || '',
-        name: cells[1]?.textContent || '',
-        description: cells[2]?.textContent || '',
-        type: cells[3]?.textContent || '',
-        rarity: cells[4]?.textContent || '',
-        requires: cells[5]?.textContent || ''
+        god: item.god,
+        name: item.boon_name,
+        description: item.description, // Keep HTML intact for v-html rendering
+        type: type,
+        rarity: 'Common to Heroic', // Simplified for now
+        requires: item.prerequisites ? 'Yes' : ''
       };
     });
   } catch (error) {
@@ -59,7 +67,7 @@ onMounted(async () => {
         <tr v-for="boon in boons" :key="`${boon.god}-${boon.name}`">
           <td>{{ boon.god }}</td>
           <td>{{ boon.name }}</td>
-          <td>{{ boon.description }}</td>
+          <td v-html="boon.description"></td>
           <td>{{ boon.type }}</td>
           <td>{{ boon.rarity }}</td>
           <td>{{ boon.requires }}</td>
