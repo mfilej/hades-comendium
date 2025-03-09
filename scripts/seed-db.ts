@@ -1,14 +1,16 @@
 // create-boons-db.ts
 import { DOMParser } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
 import { DB } from "https://deno.land/x/sqlite/mod.ts";
+import { ensureDir } from "https://deno.land/std/fs/mod.ts";
 
 // Create the database
 const db = new DB("boons.db");
 
 // Drop table if exists to start fresh
 db.execute("DROP TABLE IF EXISTS boons");
+db.execute("DROP TABLE IF EXISTS icons");
 
-// Create the table
+// Create the boons table
 db.execute(`
   CREATE TABLE IF NOT EXISTS boons (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,6 +24,125 @@ db.execute(`
     prerequisites TEXT
   )
 `);
+
+// Create a table to track icons
+db.execute(`
+  CREATE TABLE IF NOT EXISTS icons (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    original_url TEXT UNIQUE NOT NULL,
+    local_path TEXT NOT NULL,
+    alt_text TEXT
+  )
+`);
+
+// Ensure the images directory exists
+await ensureDir("public/images/icons");
+
+// Function to download an image and save it locally
+async function downloadAndSaveImage(imageUrl, alt, god) {
+  try {
+    // Check if we already have this image in our database
+    const existingIcon = db.query("SELECT local_path FROM icons WHERE original_url = ?", [imageUrl]);
+    if (existingIcon.length > 0) {
+      return existingIcon[0][0]; // Return the local path
+    }
+
+    // Clean the image URL if needed (some URLs have parameters we need to remove)
+    const cleanUrl = imageUrl.split('?')[0];
+    
+    // Generate a filename based on the god and alt text or a random name if not available
+    const urlParts = cleanUrl.split('/');
+    const originalFilename = urlParts[urlParts.length - 1];
+    
+    // Create a sanitized filename
+    const sanitizedAlt = alt ? alt.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() : '';
+    const filename = sanitizedAlt ? 
+      `${god}_${sanitizedAlt}.${originalFilename.split('.').pop()}` : 
+      `${god}_${originalFilename}`;
+    
+    const localPath = `images/icons/${filename}`;
+    const fullPath = `public/${localPath}`;
+    
+    // Fetch the image
+    console.log(`Downloading ${imageUrl}...`);
+    const response = await fetch(imageUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to download image: ${response.status} ${response.statusText}`);
+    }
+    
+    const imageData = new Uint8Array(await response.arrayBuffer());
+    
+    // Save the image to the local filesystem
+    await Deno.writeFile(fullPath, imageData);
+    console.log(`Saved image to ${fullPath}`);
+    
+    // Add to our database
+    db.query(
+      "INSERT INTO icons (original_url, local_path, alt_text) VALUES (?, ?, ?)",
+      [imageUrl, localPath, alt]
+    );
+    
+    return localPath;
+  } catch (error) {
+    console.error(`Error downloading image: ${error.message}`);
+    return null;
+  }
+}
+
+// Function to process HTML content and replace image URLs
+async function processHtmlContent(content, god) {
+  // Create a temporary document to parse the HTML
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<div>${content}</div>`, "text/html");
+  
+  if (!doc) return content;
+  
+  // Process all img tags
+  const imgTags = doc.querySelectorAll("img");
+  
+  for (const img of Array.from(imgTags)) {
+    // Get the image source and alt text
+    const alt = img.getAttribute("alt") || "";
+    const src = img.getAttribute("src");
+    const dataSrc = img.getAttribute("data-src");
+    
+    // Prioritize data-src for lazy-loaded images
+    let imageUrl = dataSrc || src;
+    
+    // Skip if we don't have a usable URL
+    if (!imageUrl || imageUrl === "about:blank") continue;
+    
+    // Clean up data URIs - if src is a data URI and data-src exists, use data-src
+    if (src && src.startsWith("data:") && dataSrc) {
+      imageUrl = dataSrc;
+    }
+    
+    // Download and save the image
+    const localPath = await downloadAndSaveImage(imageUrl, alt, god);
+    
+    if (localPath) {
+      // Create a new image element to replace the old one
+      const newImg = doc.createElement("img");
+      newImg.setAttribute("src", `/${localPath}`);
+      newImg.setAttribute("alt", alt);
+      
+      // Copy other important attributes that aren't data-* attributes
+      if (img.hasAttribute("width")) {
+        newImg.setAttribute("width", img.getAttribute("width"));
+      }
+      if (img.hasAttribute("height")) {
+        newImg.setAttribute("height", img.getAttribute("height"));
+      }
+      
+      // Replace the old image with the new one
+      img.replaceWith(newImg);
+    }
+  }
+  
+  // Return the processed HTML
+  return doc.querySelector("div").innerHTML;
+}
 
 // Process each boon file
 const boonFiles = Deno.readDirSync("./boons");
@@ -65,36 +186,45 @@ for (const file of boonFiles) {
 
   let boonCount = 0;
 
-  Array.from(rows)
-    .slice(1) // Skip header row
-    .filter(row => {
-      const firstTd = row.querySelector("td");
-      return firstTd && firstTd.className === "boonTableName";
-    })
-    .forEach((row, i) => {
-      const cells = row.querySelectorAll("td");
+  // Use Promise.all to process all rows in parallel
+  await Promise.all(
+    Array.from(rows)
+      .slice(1) // Skip header row
+      .filter(row => {
+        const firstTd = row.querySelector("td");
+        return firstTd && firstTd.className === "boonTableName";
+      })
+      .map(async (row, i) => {
+        const cells = row.querySelectorAll("td");
+        const boonName = cells[0].querySelector("b").textContent;
 
-      const boonName = cells[0].querySelector("b").textContent;
+        // Get the original HTML content for each column
+        const boonHtml = cells[0].innerHTML.trim();
+        const descriptionHtml = cells[1].innerHTML.trim();
+        const rarityHtml = cells[2].innerHTML.trim();
+        const notesHtml = cells[3].innerHTML.trim();
+        const prerequisitesHtml = cells[4].innerHTML.trim();
 
-      // Get the full HTML content for each column
-      const boonHtml = cells[0].innerHTML.trim();
-      const description = cells[1].innerHTML.trim();
-      const rarity = cells[2].innerHTML.trim();
-      const notes = cells[3].innerHTML.trim();
-      const prerequisites = cells[4].innerHTML.trim();
+        try {
+          // Process HTML content to replace image URLs with local references
+          const processedBoonHtml = await processHtmlContent(boonHtml, god);
+          const processedDescription = await processHtmlContent(descriptionHtml, god);
+          const processedRarity = await processHtmlContent(rarityHtml, god);
+          const processedNotes = await processHtmlContent(notesHtml, god);
+          const processedPrerequisites = await processHtmlContent(prerequisitesHtml, god);
 
-      try {
-        // Insert into the database with god name and row index
-        db.query(
-          "INSERT INTO boons (god, row_idx, boon_name, boon_html, description, rarity, notes, prerequisites) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-          [god, i, boonName, boonHtml, description, rarity, notes, prerequisites]
-        );
-        boonCount++;
-        totalImported++;
-      } catch (err) {
-        console.error(`Error inserting boon: ${err.message}`);
-      }
-    });
+          // Insert into the database with god name and row index
+          db.query(
+            "INSERT INTO boons (god, row_idx, boon_name, boon_html, description, rarity, notes, prerequisites) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            [god, i, boonName, processedBoonHtml, processedDescription, processedRarity, processedNotes, processedPrerequisites]
+          );
+          boonCount++;
+          totalImported++;
+        } catch (err) {
+          console.error(`Error processing boon ${boonName}: ${err.message}`);
+        }
+      })
+  );
 
   console.log(`Imported ${boonCount} boons for ${god}`);
 }
@@ -109,6 +239,10 @@ const godCounts = db.query("SELECT god, COUNT(*) as count FROM boons GROUP BY go
 for (const godCount of godCounts) {
   console.log(`${godCount[0]}: ${godCount[1]}`);
 }
+
+// Count icons
+const [iconCount] = db.query("SELECT COUNT(*) as count FROM icons");
+console.log(`\nTotal icons downloaded: ${iconCount[0]}`);
 
 // Close the database
 db.close();

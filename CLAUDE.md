@@ -1,6 +1,6 @@
 # Hades compendium
 
-We're building a compendium for the video game Hades. This is an early version that only focuses on boons.
+We're building a compendium for the video game Hades.
 
 The projects uses deno.
 
@@ -13,7 +13,11 @@ The data is processed in these steps:
 - `mise seed-db` to parse the HTML tables into a sqlite datase stored in ./boons.db
 - `mise dump-json` to dump the sqlite table into a JSON file that can be read by the vue.js frotend.
 
+The scripts to massage the data are stored in ./scripts/.
+
 ## Running the server
+
+The compendium is a vue.js app.
 
 ```
 mise server
