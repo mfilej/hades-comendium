@@ -17,7 +17,7 @@ The scripts to massage the data are stored in ./scripts/.
 
 ## Running the server
 
-The compendium is a vue.js app.
+The compendium frontend is built with vue.js and tailwind.
 
 ```
 mise server

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import SearchInput from './SearchInput.vue';
+import BoonTableRow from './BoonTableRow.vue';
 
 interface Boon {
   god: string;
@@ -34,12 +36,12 @@ function extractImageUrl(html: string, godName: string, boonName: string): strin
   const img = doc.querySelector('img');
   
   // If we found an image with a valid src, use it
-  if (img && img.getAttribute('src') && !img.getAttribute('src').startsWith('data:')) {
+  if (img?.getAttribute('src') && !img.getAttribute('src')?.startsWith('data:')) {
     return img.getAttribute('src') || '';
   }
   
   // If the image has a data-src attribute, it might be a lazy-loaded image
-  if (img && img.getAttribute('data-src')) {
+  if (img?.getAttribute('data-src')) {
     return img.getAttribute('data-src') || '';
   }
   
@@ -92,7 +94,7 @@ onMounted(async () => {
         god: item.god.charAt(0).toUpperCase() + item.god.slice(1), // Capitalize god name
         name: item.boon_name,
         icon: iconUrl,
-        description: item.description, // Keep HTML intact for v-html rendering
+        description: item.description,
         rarity: item.rarity,
         notes: item.notes,
         requires: item.prerequisites
@@ -105,129 +107,28 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="boon-controls">
-    <input 
-      v-model="searchQuery"
-      type="text"
-      placeholder="Search boons..."
-      class="search-input"
-    />
+  <div class="mb-4">
+    <SearchInput v-model="searchQuery" />
   </div>
 
-  <div class="boon-table-container">
-    <table class="boon-table">
+  <div class="w-full overflow-x-auto my-4">
+    <table class="w-full border-collapse bg-neutral-900 text-white">
       <thead>
         <tr>
-          <th>God</th>
-          <th>Boon</th>
-          <th>Description</th>
-          <th>Rarity</th>
-          <th>Requires</th>
+          <th class="p-3 text-left border border-neutral-700 bg-neutral-800 font-bold">God</th>
+          <th class="p-3 text-left border border-neutral-700 bg-neutral-800 font-bold">Boon</th>
+          <th class="p-3 text-left border border-neutral-700 bg-neutral-800 font-bold">Description</th>
+          <th class="p-3 text-left border border-neutral-700 bg-neutral-800 font-bold">Rarity</th>
+          <th class="p-3 text-left border border-neutral-700 bg-neutral-800 font-bold">Requires</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="boon in filteredBoons" :key="`${boon.god}-${boon.name}`">
-          <td>{{ boon.god }}</td>
-          <td>
-            <div class="boon-title">
-              <img v-if="boon.icon" :src="boon.icon" :alt="boon.name" class="boon-icon" />
-              <span>{{ boon.name }}</span>
-            </div>
-          </td>
-          <td v-html="boon.description" class="boon-description"></td>
-          <td v-html="boon.rarity"></td>
-          <td v-html="boon.requires"></td>
-        </tr>
+        <BoonTableRow
+          v-for="boon in filteredBoons"
+          :key="`${boon.god}-${boon.name}`"
+          :boon="boon"
+        />
       </tbody>
     </table>
   </div>
 </template>
-
-<style scoped>
-.boon-controls {
-  margin-bottom: 1rem;
-}
-
-.search-input {
-  padding: 0.5rem;
-  width: 100%;
-  max-width: 300px;
-  background: #2a2a2a;
-  border: 1px solid #444;
-  color: #fff;
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #666;
-}
-
-.boon-table-container {
-  width: 100%;
-  overflow-x: auto;
-  margin: 1rem 0;
-}
-
-.boon-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #1a1a1a;
-  color: #ffffff;
-}
-
-.boon-table th,
-.boon-table td {
-  padding: 0.75rem;
-  text-align: left;
-  border: 1px solid #333;
-}
-
-.boon-table th {
-  background: #2a2a2a;
-  font-weight: bold;
-}
-
-.boon-table tr:hover {
-  background: #252525;
-}
-
-.boon-description {
-  max-width: 300px;
-  white-space: normal;
-  word-wrap: break-word;
-}
-
-/* Style for descriptions with inline icons */
-.boon-description img {
-  display: inline-flex;
-  vertical-align: text-bottom;
-  height: 20px; /* Slightly smaller than other images */
-  width: auto;
-  margin: 0 2px;
-  /* Prevent these images from breaking lines */
-  flex-shrink: 0;
-}
-
-/* Style for icons in the description and other cells */
-:deep(.boon-table img) {
-  vertical-align: middle;
-  margin: 0 2px;
-  height: 24px;
-  width: auto;
-  display: inline-block;
-}
-
-/* Display the boon title with icon */
-.boon-title {
-  display: flex;
-  align-items: center;
-}
-
-.boon-icon {
-  width: 40px !important;
-  height: 40px !important;
-  margin-right: 10px;
-}
-</style> 
