@@ -19,3 +19,6 @@ run = "deno run --allow-write --allow-net scripts/scrape-boons.ts"
 
 [tasks.seed-db]
 run = "deno run --allow-read --allow-write --allow-net scripts/seed-db.ts"
+
+[tasks.dump-json]
+run = "deno run --allow-read --allow-write --allow-net scripts/dump-json.ts"
