@@ -26,7 +26,9 @@ raw CSS instead of utilizing Tailwind classes as directed.
 
 What impressed me most was watching Claude iterate on its own solutions. Without
 any prompting from me, it would often realize a better approach and refactor its
-work. This autonomous improvement cycle was fascinating to observe.
+work. This autonomous improvement cycle was fascinating to observe. I was
+particularly impressed by its ability to iterate on troubleshooting problems
+even when I provided only vague descriptions of what was wrong.
 
 There were also some minor technical issues—sometimes Claude would hang when
 trying to run the server, though this seems like a bug that will likely be
@@ -53,7 +55,12 @@ This project helped me realize that leaning into the vibe coding approach and
 allowing the AI to take the lead is a skill that requires deliberate practice
 and patience—one that I'm still developing.
 
-The entire project cost approximately $10 in Claude API credits from start to finish.
+The downside to letting LLMs handle all the work is that I genuinely enjoy
+coding myself. However, at least while the novelty lasts, there's some enjoyment
+to be found in watching computers code on their own.
+
+The entire project cost approximately $10 in Claude API credits from start to
+finish.
 
 ## Running the Project
 
