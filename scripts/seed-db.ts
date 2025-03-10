@@ -132,7 +132,7 @@ async function processHtmlContent(content, god) {
     if (localPath) {
       // Create a new image element to replace the old one
       const newImg = doc.createElement("img");
-      newImg.setAttribute("src", `/${localPath}`);
+      newImg.setAttribute("src", `/hades-compendium/${localPath}`);
       newImg.setAttribute("alt", alt);
 
       // Copy other important attributes that aren't data-* attributes
