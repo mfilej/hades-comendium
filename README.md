@@ -53,6 +53,8 @@ This project helped me realize that leaning into the vibe coding approach and
 allowing the AI to take the lead is a skill that requires deliberate practice
 and patience—one that I'm still developing.
 
+The entire project cost approximately $10 in Claude API credits from start to finish.
+
 ## Running the Project
 
 See CLAUDE.md for instructions on running the server and processing data from
