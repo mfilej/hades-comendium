@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import BoonTable from "./components/BoonTable.vue";
+import SearchInput from "./components/SearchInput.vue";
+import { ref } from "vue";
+
+const searchQuery = ref("");
 </script>
 
 <template>
@@ -12,10 +16,10 @@ import BoonTable from "./components/BoonTable.vue";
       >
         Hades Compendium
       </h1>
-      <div id="search-container"></div>
+      <SearchInput v-model="searchQuery" />
     </header>
     <main class="flex-1 overflow-hidden p-0">
-      <BoonTable />
+      <BoonTable :search-query="searchQuery" />
     </main>
   </div>
 </template>

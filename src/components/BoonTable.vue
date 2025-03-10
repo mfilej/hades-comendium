@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from "vue";
-import { createApp } from "vue";
-import SearchInput from "./SearchInput.vue";
+import { computed, onMounted, ref } from "vue";
 import BoonTableRow from "./BoonTableRow.vue";
+
+const props = defineProps<{
+  searchQuery: string;
+}>();
 
 interface Boon {
   god: string;
@@ -27,7 +29,6 @@ interface BoonData {
 }
 
 const boons = ref<Boon[]>([]);
-const searchQuery = ref("");
 
 // Function to extract image URL from HTML string or generate a placeholder
 function extractImageUrl(
@@ -79,7 +80,7 @@ function extractImageUrl(
 }
 
 const filteredBoons = computed(() => {
-  const query = searchQuery.value.toLowerCase().trim();
+  const query = props.searchQuery.toLowerCase().trim();
   if (!query) return boons.value;
 
   return boons.value.filter((boon) =>
@@ -88,21 +89,6 @@ const filteredBoons = computed(() => {
     boon.description.toLowerCase().includes(query)
   );
 });
-
-// Mount the search input in the header
-function mountSearchInHeader() {
-  const searchContainer = document.getElementById("search-container");
-  if (searchContainer) {
-    const searchApp = createApp({
-      components: { SearchInput },
-      template: '<SearchInput v-model="query" />',
-      setup() {
-        return { query: searchQuery };
-      },
-    });
-    searchApp.mount(searchContainer);
-  }
-}
 
 onMounted(async () => {
   try {
@@ -123,11 +109,6 @@ onMounted(async () => {
         notes: item.notes,
         requires: item.prerequisites,
       };
-    });
-
-    // Mount search input in header after everything is loaded
-    nextTick(() => {
-      mountSearchInHeader();
     });
   } catch (error) {
     console.error("Error loading boons:", error);
