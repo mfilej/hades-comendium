@@ -118,7 +118,7 @@ onMounted(async () => {
 
 <template>
   <div class="h-full w-full overflow-auto p-0 bg-black">
-    <table class="border-collapse bg-neutral-900 text-white">
+    <table class="w-full border-collapse bg-neutral-900 text-white table-fixed">
       <tbody>
         <BoonTableRow
           v-for="boon in filteredBoons"
