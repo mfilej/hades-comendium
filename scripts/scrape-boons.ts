@@ -26,7 +26,9 @@ for (const god of gods) {
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      console.error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+      console.error(
+        `Failed to fetch ${url}: ${response.status} ${response.statusText}`,
+      );
       continue;
     }
 
@@ -49,7 +51,6 @@ for (const god of gods) {
 
     await Deno.writeTextFile(`boons/${god}.html`, tableHtml);
     console.log(`Saved boon table for ${god}`);
-
   } catch (error) {
     console.error(`Error fetching boons for ${god}:`, error);
   }

@@ -22,8 +22,8 @@ await ensureDir("public/data");
 
 // Write boons to JSON file
 await Deno.writeTextFile(
-  "public/data/boons.json", 
-  JSON.stringify(boons, null, 2)
+  "public/data/boons.json",
+  JSON.stringify(boons, null, 2),
 );
 
 console.log(`Exported ${boons.length} boons to public/data/boons.json`);

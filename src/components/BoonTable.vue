@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick } from 'vue';
-import { createApp } from 'vue';
-import SearchInput from './SearchInput.vue';
-import BoonTableRow from './BoonTableRow.vue';
+import { computed, nextTick, onMounted, ref } from "vue";
+import { createApp } from "vue";
+import SearchInput from "./SearchInput.vue";
+import BoonTableRow from "./BoonTableRow.vue";
 
 interface Boon {
   god: string;
@@ -27,45 +27,53 @@ interface BoonData {
 }
 
 const boons = ref<Boon[]>([]);
-const searchQuery = ref('');
+const searchQuery = ref("");
 
 // Function to extract image URL from HTML string or generate a placeholder
-function extractImageUrl(html: string, godName: string, boonName: string): string {
+function extractImageUrl(
+  html: string,
+  godName: string,
+  boonName: string,
+): string {
   // Try to extract from HTML first
   const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  const img = doc.querySelector('img');
-  
+  const doc = parser.parseFromString(html, "text/html");
+  const img = doc.querySelector("img");
+
   // If we found an image with a valid src, use it
-  if (img?.getAttribute('src') && !img.getAttribute('src')?.startsWith('data:')) {
-    return img.getAttribute('src') || '';
+  if (
+    img?.getAttribute("src") && !img.getAttribute("src")?.startsWith("data:")
+  ) {
+    return img.getAttribute("src") || "";
   }
-  
+
   // If the image has a data-src attribute, it might be a lazy-loaded image
-  if (img?.getAttribute('data-src')) {
-    return img.getAttribute('data-src') || '';
+  if (img?.getAttribute("data-src")) {
+    return img.getAttribute("data-src") || "";
   }
-  
+
   // Look for the image in the database by constructing a likely path
   // Extract boon name, sanitize it, and construct a path
-  const sanitizedBoonName = boonName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+  const sanitizedBoonName = boonName.replace(/[^a-zA-Z0-9]/g, "_")
+    .toLowerCase();
   const possibleIconPath = `/images/icons/${godName}_${sanitizedBoonName}.100`;
-  
+
   // Check if the file exists (this is a client-side fallback)
   const img2 = new Image();
   img2.src = possibleIconPath;
   if (img2.complete) {
     return possibleIconPath;
   }
-  
+
   // If we still couldn't find a valid image, try a variation
-  const alternateIconPath = `/images/icons/${godName}_${sanitizedBoonName}_i.100`;
+  const alternateIconPath =
+    `/images/icons/${godName}_${sanitizedBoonName}_i.100`;
   const img3 = new Image();
   img3.src = alternateIconPath;
   if (img3.complete) {
     return alternateIconPath;
   }
-  
+
   // If we couldn't find a valid image, generate a placeholder
   return `/images/icons/${godName}_placeholder.png`;
 }
@@ -73,9 +81,9 @@ function extractImageUrl(html: string, godName: string, boonName: string): strin
 const filteredBoons = computed(() => {
   const query = searchQuery.value.toLowerCase().trim();
   if (!query) return boons.value;
-  
-  return boons.value.filter(boon => 
-    boon.name.toLowerCase().includes(query) || 
+
+  return boons.value.filter((boon) =>
+    boon.name.toLowerCase().includes(query) ||
     boon.god.toLowerCase().includes(query) ||
     boon.description.toLowerCase().includes(query)
   );
@@ -83,14 +91,14 @@ const filteredBoons = computed(() => {
 
 // Mount the search input in the header
 function mountSearchInHeader() {
-  const searchContainer = document.getElementById('search-container');
+  const searchContainer = document.getElementById("search-container");
   if (searchContainer) {
     const searchApp = createApp({
       components: { SearchInput },
       template: '<SearchInput v-model="query" />',
       setup() {
         return { query: searchQuery };
-      }
+      },
     });
     searchApp.mount(searchContainer);
   }
@@ -98,14 +106,14 @@ function mountSearchInHeader() {
 
 onMounted(async () => {
   try {
-    const response = await fetch('/data/boons.json');
+    const response = await fetch("/data/boons.json");
     const data: BoonData[] = await response.json();
-    
+
     // Map database boons to the component's Boon format
-    boons.value = data.map(item => {
+    boons.value = data.map((item) => {
       // Extract the icon URL from the boon_html, or use a placeholder
       const iconUrl = extractImageUrl(item.boon_html, item.god, item.boon_name);
-      
+
       return {
         god: item.god.charAt(0).toUpperCase() + item.god.slice(1), // Capitalize god name
         name: item.boon_name,
@@ -113,16 +121,16 @@ onMounted(async () => {
         description: item.description,
         rarity: item.rarity,
         notes: item.notes,
-        requires: item.prerequisites
+        requires: item.prerequisites,
       };
     });
-    
+
     // Mount search input in header after everything is loaded
     nextTick(() => {
       mountSearchInHeader();
     });
   } catch (error) {
-    console.error('Error loading boons:', error);
+    console.error("Error loading boons:", error);
   }
 });
 </script>

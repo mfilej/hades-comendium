@@ -9,34 +9,44 @@ const db = new DB("boons.db");
 async function updateBoonHtml(god, boonName) {
   try {
     // Generate expected image path
-    const sanitizedBoonName = boonName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    const expectedPath = `public/images/icons/${god}_${sanitizedBoonName}_i.100`;
-    
+    const sanitizedBoonName = boonName.replace(/[^a-zA-Z0-9]/g, "_")
+      .toLowerCase();
+    const expectedPath =
+      `public/images/icons/${god}_${sanitizedBoonName}_i.100`;
+
     // Check if image exists
     if (await exists(expectedPath)) {
-      const localPath = expectedPath.replace('public/', '');
-      
+      const localPath = expectedPath.replace("public/", "");
+
       // Update the boon_html to use the new image
-      const boon = db.query("SELECT boon_html FROM boons WHERE god = ? AND boon_name = ?", [god, boonName]);
+      const boon = db.query(
+        "SELECT boon_html FROM boons WHERE god = ? AND boon_name = ?",
+        [god, boonName],
+      );
       if (boon.length > 0) {
         const boonHtml = boon[0][0];
-        
+
         // Parse the HTML and update the image
-        const updatedHtml = boonHtml.replace(/<img[^>]*>/g, `<img src="/${localPath}" alt="${boonName}">`);
-        
+        const updatedHtml = boonHtml.replace(
+          /<img[^>]*>/g,
+          `<img src="/${localPath}" alt="${boonName}">`,
+        );
+
         // Update the database
         db.query(
           "UPDATE boons SET boon_html = ? WHERE god = ? AND boon_name = ?",
-          [updatedHtml, god, boonName]
+          [updatedHtml, god, boonName],
         );
-        
+
         console.log(`Updated HTML for ${god}'s ${boonName}`);
         return true;
       }
     } else {
-      console.log(`Image not found for ${god}'s ${boonName} at path ${expectedPath}`);
+      console.log(
+        `Image not found for ${god}'s ${boonName} at path ${expectedPath}`,
+      );
     }
-    
+
     return false;
   } catch (error) {
     console.error(`Error updating boon HTML: ${error.message}`);
@@ -53,7 +63,7 @@ const flareData = [
   { god: "demeter", boonName: "Icy Flare" },
   { god: "aphrodite", boonName: "Passion Flare" },
   { god: "ares", boonName: "Slicing Flare" },
-  { god: "athena", boonName: "Phalanx Flare" }
+  { god: "athena", boonName: "Phalanx Flare" },
 ];
 
 // Update each flare boon
@@ -73,38 +83,48 @@ console.log(`\nUpdated ${updateCount} out of ${flareData.length} Flare boons.`);
 async function copyImageForFlare(god, shotName, flareName) {
   try {
     // Generate expected image paths
-    const sanitizedShotName = shotName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    const sanitizedFlareName = flareName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    
+    const sanitizedShotName = shotName.replace(/[^a-zA-Z0-9]/g, "_")
+      .toLowerCase();
+    const sanitizedFlareName = flareName.replace(/[^a-zA-Z0-9]/g, "_")
+      .toLowerCase();
+
     const shotPath = `public/images/icons/${god}_${sanitizedShotName}_i.100`;
     const flarePath = `public/images/icons/${god}_${sanitizedFlareName}_i.100`;
-    
+
     // Check if shot image exists and flare doesn't
     if (await exists(shotPath) && !(await exists(flarePath))) {
       // Copy the shot image to the flare path
       const shotData = await Deno.readFile(shotPath);
       await Deno.writeFile(flarePath, shotData);
-      
+
       console.log(`Copied image from ${shotPath} to ${flarePath}`);
-      
+
       // Update the boon HTML
-      const localPath = flarePath.replace('public/', '');
-      const boon = db.query("SELECT boon_html FROM boons WHERE god = ? AND boon_name = ?", [god, flareName]);
-      
+      const localPath = flarePath.replace("public/", "");
+      const boon = db.query(
+        "SELECT boon_html FROM boons WHERE god = ? AND boon_name = ?",
+        [god, flareName],
+      );
+
       if (boon.length > 0) {
         const boonHtml = boon[0][0];
-        const updatedHtml = boonHtml.replace(/<img[^>]*>/g, `<img src="/${localPath}" alt="${flareName}">`);
-        
+        const updatedHtml = boonHtml.replace(
+          /<img[^>]*>/g,
+          `<img src="/${localPath}" alt="${flareName}">`,
+        );
+
         db.query(
           "UPDATE boons SET boon_html = ? WHERE god = ? AND boon_name = ?",
-          [updatedHtml, god, flareName]
+          [updatedHtml, god, flareName],
         );
-        
-        console.log(`Updated HTML for ${god}'s ${flareName} using ${shotName} image`);
+
+        console.log(
+          `Updated HTML for ${god}'s ${flareName} using ${shotName} image`,
+        );
         return true;
       }
     }
-    
+
     return false;
   } catch (error) {
     console.error(`Error copying image: ${error.message}`);
@@ -121,7 +141,7 @@ const shotToFlareMap = [
   { god: "demeter", shotName: "Crystal Beam", flareName: "Icy Flare" },
   { god: "aphrodite", shotName: "Crush Shot", flareName: "Passion Flare" },
   { god: "ares", shotName: "Slicing Shot", flareName: "Slicing Flare" },
-  { god: "athena", shotName: "Phalanx Shot", flareName: "Phalanx Flare" }
+  { god: "athena", shotName: "Phalanx Shot", flareName: "Phalanx Flare" },
 ];
 
 // Copy images if needed
