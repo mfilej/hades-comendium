@@ -9,7 +9,7 @@ node = "23"
 run = "vite"
 
 [tasks.build]
-run = "vue-tsc -b && vite build"
+run = "deno run -A npm:vite build"
 
 [tasks.preview]
 run = "vite preview"
