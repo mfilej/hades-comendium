@@ -36,47 +36,31 @@ function extractImageUrl(
   godName: string,
   boonName: string,
 ): string {
-  // Try to extract from HTML first
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, "text/html");
-  const img = doc.querySelector("img");
-
-  // If we found an image with a valid src, use it
-  if (
-    img?.getAttribute("src") && !img.getAttribute("src")?.startsWith("data:")
-  ) {
-    return img.getAttribute("src") || "";
+  // First try a direct match with the known filename pattern (this is most reliable)
+  const sanitizedBoonName = boonName
+    .toLowerCase()
+    .replace(/'/g, "") // Remove apostrophes completely
+    .replace(/[^a-z0-9]/g, "_"); // Replace other non-alphanumeric chars with underscores
+    
+  // Most icons follow the pattern: godname_boonname_i.100
+  const directIconPath = `${import.meta.env.BASE_URL}images/icons/${godName}_${sanitizedBoonName}_i.100`;
+  
+  // For Aid boons which have special formatting
+  if (boonName.includes("Aid")) {
+    const aidIconPath = `${import.meta.env.BASE_URL}images/icons/${godName}_${godName}_s_aid_i.100`;
+    return aidIconPath;
   }
-
-  // If the image has a data-src attribute, it might be a lazy-loaded image
-  if (img?.getAttribute("data-src")) {
-    return img.getAttribute("data-src") || "";
+  
+  // For certain boons that might have different patterns (flares, etc.)
+  if (boonName.includes("Flare")) {
+    const flareIconPath = `${import.meta.env.BASE_URL}images/icons/${godName}_${sanitizedBoonName.replace("flare", "flare_i")}.100`;
+    // Return the standard path since this is just trying alternate formatting
+    return directIconPath;
   }
-
-  // Look for the image in the database by constructing a likely path
-  // Extract boon name, sanitize it, and construct a path
-  const sanitizedBoonName = boonName.replace(/[^a-zA-Z0-9]/g, "_")
-    .toLowerCase();
-  const possibleIconPath = `/images/icons/${godName}_${sanitizedBoonName}.100`;
-
-  // Check if the file exists (this is a client-side fallback)
-  const img2 = new Image();
-  img2.src = possibleIconPath;
-  if (img2.complete) {
-    return possibleIconPath;
-  }
-
-  // If we still couldn't find a valid image, try a variation
-  const alternateIconPath =
-    `/images/icons/${godName}_${sanitizedBoonName}_i.100`;
-  const img3 = new Image();
-  img3.src = alternateIconPath;
-  if (img3.complete) {
-    return alternateIconPath;
-  }
-
-  // If we couldn't find a valid image, generate a placeholder
-  return `/images/icons/${godName}_placeholder.png`;
+  
+  // We'll return the most likely path without checking if it exists
+  // The browser will use the fallback image if it doesn't load
+  return directIconPath;
 }
 
 const filteredBoons = computed(() => {
@@ -92,7 +76,8 @@ const filteredBoons = computed(() => {
 
 onMounted(async () => {
   try {
-    const response = await fetch("/data/boons.json");
+    // Use import.meta.env.BASE_URL to get the configured base path
+    const response = await fetch(`${import.meta.env.BASE_URL}data/boons.json`);
     const data: BoonData[] = await response.json();
 
     // Map database boons to the component's Boon format
