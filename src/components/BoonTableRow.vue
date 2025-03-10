@@ -15,32 +15,39 @@ defineProps<{
 </script>
 
 <template>
-  <tr class="hover:bg-neutral-800">
-    <td class="p-3 text-left border border-neutral-700">{{ boon.god }}</td>
-    <td class="p-3 text-left border border-neutral-700">
-      <div class="flex items-center">
-        <img 
-          v-if="boon.icon" 
-          :src="boon.icon" 
-          :alt="boon.name" 
-          class="w-[50px] h-[50px] mr-[10px]"
-        />
-        <span>{{ boon.name }}</span>
-      </div>
+  <tr class="hover:bg-neutral-800 border-b border-neutral-700">
+    <td class="p-1 text-left text-xs border-r border-neutral-700">
+      <img 
+        v-if="boon.icon" 
+        :src="boon.icon" 
+        :alt="boon.name" 
+        class="w-[32px] h-[32px]"
+      />
     </td>
+    <td class="p-1 text-left text-xs border-r border-neutral-700">{{ boon.god }}</td>
+    <td class="p-1 text-left border-r border-neutral-700 text-xs">{{ boon.name }}</td>
     <td 
       v-html="boon.description" 
-      class="p-3 text-left border border-neutral-700 max-w-[300px] break-words"
+      class="p-1 text-left border-r border-neutral-700 break-words text-xs"
     />
     <td 
       v-html="boon.rarity" 
-      class="p-3 text-left border border-neutral-700"
+      class="p-1 text-left border-r border-neutral-700 text-xs"
     />
     <td 
       v-html="boon.requires" 
-      class="p-3 text-left border border-neutral-700"
+      class="p-1 text-left text-xs"
     />
   </tr>
 </template>
 
- 
+<style>
+/* Style for images in boon description cells */
+td[v-html] img {
+  display: inline-flex !important;
+  vertical-align: middle !important;
+  height: 18px !important;
+  width: auto !important;
+  margin: 0 1px !important;
+}
+</style>

@@ -13,7 +13,7 @@ defineEmits<{
     :value="modelValue"
     @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     type="text"
-    placeholder="Search boons..."
-    class="w-full max-w-[300px] p-2 bg-neutral-800 border border-neutral-600 text-white rounded text-base focus:outline-none focus:border-neutral-500"
+    placeholder="Search..."
+    class="w-[150px] h-[20px] py-0 px-1 bg-neutral-800 border border-neutral-700 text-white rounded-sm text-xs focus:outline-none focus:border-neutral-500"
   />
 </template> 

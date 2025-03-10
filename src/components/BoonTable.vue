@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, nextTick } from 'vue';
+import { createApp } from 'vue';
 import SearchInput from './SearchInput.vue';
 import BoonTableRow from './BoonTableRow.vue';
 
@@ -80,6 +81,21 @@ const filteredBoons = computed(() => {
   );
 });
 
+// Mount the search input in the header
+function mountSearchInHeader() {
+  const searchContainer = document.getElementById('search-container');
+  if (searchContainer) {
+    const searchApp = createApp({
+      components: { SearchInput },
+      template: '<SearchInput v-model="query" />',
+      setup() {
+        return { query: searchQuery };
+      }
+    });
+    searchApp.mount(searchContainer);
+  }
+}
+
 onMounted(async () => {
   try {
     const response = await fetch('/data/boons.json');
@@ -100,6 +116,11 @@ onMounted(async () => {
         requires: item.prerequisites
       };
     });
+    
+    // Mount search input in header after everything is loaded
+    nextTick(() => {
+      mountSearchInHeader();
+    });
   } catch (error) {
     console.error('Error loading boons:', error);
   }
@@ -107,21 +128,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="mb-4">
-    <SearchInput v-model="searchQuery" />
-  </div>
-
-  <div class="w-full overflow-x-auto my-4">
-    <table class="w-full border-collapse bg-neutral-900 text-white">
-      <thead>
-        <tr>
-          <th class="p-3 text-left border border-neutral-700 bg-neutral-800 font-bold">God</th>
-          <th class="p-3 text-left border border-neutral-700 bg-neutral-800 font-bold">Boon</th>
-          <th class="p-3 text-left border border-neutral-700 bg-neutral-800 font-bold">Description</th>
-          <th class="p-3 text-left border border-neutral-700 bg-neutral-800 font-bold">Rarity</th>
-          <th class="p-3 text-left border border-neutral-700 bg-neutral-800 font-bold">Requires</th>
-        </tr>
-      </thead>
+  <div class="h-full w-full overflow-auto p-0 bg-black">
+    <table class="border-collapse bg-neutral-900 text-white">
       <tbody>
         <BoonTableRow
           v-for="boon in filteredBoons"
