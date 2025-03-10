@@ -29,7 +29,9 @@ jobs:
       - name: Install mise
         uses: jdx/mise-action@v2
       - name: Build
-        run: mise run build
+        run: |
+          deno install
+          mise run build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
