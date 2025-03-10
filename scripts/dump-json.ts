@@ -10,6 +10,7 @@ const boons = db.queryEntries<{
   god: string;
   row_idx: number;
   boon_name: string;
+  slug: string;
   boon_html: string;
   description: string;
   rarity: string;

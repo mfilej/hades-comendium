@@ -9,6 +9,7 @@ const props = defineProps<{
 interface Boon {
   god: string;
   name: string;
+  slug: string;
   icon: string;
   description: string;
   rarity: string;
@@ -21,6 +22,7 @@ interface BoonData {
   god: string;
   row_idx: number;
   boon_name: string;
+  slug: string;
   boon_html: string;
   description: string;
   rarity: string;
@@ -30,37 +32,13 @@ interface BoonData {
 
 const boons = ref<Boon[]>([]);
 
-// Function to extract image URL from HTML string or generate a placeholder
-function extractImageUrl(
-  html: string,
-  godName: string,
-  boonName: string,
-): string {
-  // First try a direct match with the known filename pattern (this is most reliable)
-  const sanitizedBoonName = boonName
-    .toLowerCase()
-    .replace(/'/g, "") // Remove apostrophes completely
-    .replace(/[^a-z0-9]/g, "_"); // Replace other non-alphanumeric chars with underscores
-    
-  // Most icons follow the pattern: godname_boonname_i.100
-  const directIconPath = `${import.meta.env.BASE_URL}images/icons/${godName}_${sanitizedBoonName}_i.100`;
+// Function to generate icon URL from slug
+function getIconUrl(godName: string, slug: string): string {
+  // Use our standardized naming convention
+  const iconPath = `${import.meta.env.BASE_URL}images/icons/${godName}_${slug}_icon.100`;
   
-  // For Aid boons which have special formatting
-  if (boonName.includes("Aid")) {
-    const aidIconPath = `${import.meta.env.BASE_URL}images/icons/${godName}_${godName}_s_aid_i.100`;
-    return aidIconPath;
-  }
-  
-  // For certain boons that might have different patterns (flares, etc.)
-  if (boonName.includes("Flare")) {
-    const flareIconPath = `${import.meta.env.BASE_URL}images/icons/${godName}_${sanitizedBoonName.replace("flare", "flare_i")}.100`;
-    // Return the standard path since this is just trying alternate formatting
-    return directIconPath;
-  }
-  
-  // We'll return the most likely path without checking if it exists
-  // The browser will use the fallback image if it doesn't load
-  return directIconPath;
+  // Return the path - if it doesn't exist, we'll handle the error in the component
+  return iconPath;
 }
 
 const filteredBoons = computed(() => {
@@ -82,12 +60,13 @@ onMounted(async () => {
 
     // Map database boons to the component's Boon format
     boons.value = data.map((item) => {
-      // Extract the icon URL from the boon_html, or use a placeholder
-      const iconUrl = extractImageUrl(item.boon_html, item.god, item.boon_name);
+      // Generate the icon URL based on the slug
+      const iconUrl = getIconUrl(item.god, item.slug);
 
       return {
         god: item.god.charAt(0).toUpperCase() + item.god.slice(1), // Capitalize god name
         name: item.boon_name,
+        slug: item.slug,
         icon: iconUrl,
         description: item.description,
         rarity: item.rarity,

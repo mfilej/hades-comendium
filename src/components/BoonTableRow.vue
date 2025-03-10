@@ -2,6 +2,7 @@
 interface Boon {
   god: string;
   name: string;
+  slug: string;
   icon: string;
   description: string;
   rarity: string;
@@ -18,7 +19,6 @@ defineProps<{
   <tr class="hover:bg-neutral-800 border-b border-neutral-700">
     <td class="w-10 p-1 text-left text-xs border-r border-neutral-700">
       <img
-        v-if="boon.icon"
         :src="boon.icon"
         :alt="boon.name"
         class="size-[32px]"

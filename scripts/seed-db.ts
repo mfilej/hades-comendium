@@ -17,6 +17,7 @@ db.execute(`
     god TEXT NOT NULL,
     row_idx INTEGER NOT NULL,
     boon_name TEXT NOT NULL,
+    slug TEXT NOT NULL,
     boon_html TEXT,
     description TEXT,
     rarity TEXT,
@@ -151,6 +152,15 @@ async function processHtmlContent(content, god) {
   return doc.querySelector("div").innerHTML;
 }
 
+// Function to generate a consistent slug for boon names
+function generateSlug(boonName: string): string {
+  return boonName
+    .toLowerCase()
+    .replace(/'/g, "") // Remove apostrophes completely
+    .replace(/[^a-z0-9]+/g, "_") // Replace any non-alphanumeric characters with underscores
+    .replace(/^_+|_+$/g, ""); // Remove leading and trailing underscores
+}
+
 // Process each boon file
 const boonFiles = Deno.readDirSync("./boons");
 let totalImported = 0;
@@ -226,13 +236,17 @@ for (const file of boonFiles) {
             god,
           );
 
-          // Insert into the database with god name and row index
+          // Generate a slug for the boon name
+          const slug = generateSlug(boonName);
+          
+          // Insert into the database with god name, row index, and slug
           db.query(
-            "INSERT INTO boons (god, row_idx, boon_name, boon_html, description, rarity, notes, prerequisites) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO boons (god, row_idx, boon_name, slug, boon_html, description, rarity, notes, prerequisites) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
               god,
               i,
               boonName,
+              slug,
               processedBoonHtml,
               processedDescription,
               processedRarity,
